@@ -73,7 +73,7 @@
             gap: 15px;
         }
 
-        .connect-btn {
+        .session-btn {
             background: var(--RIFT-gold);
             color: #0c0e12;
             border: none;
@@ -85,7 +85,7 @@
             transition: all 0.2s ease;
         }
 
-        .connect-btn:hover {
+        .session-btn:hover {
             background: var(--RIFT-amber);
         }
 
@@ -423,7 +423,7 @@
     <header>
         <div>
             <div class="brand-title">THE SAINTS RIFT</div>
-            <div style="font-size: 10px; color: #737f93; margin-top: 2px;">SSU AUTOMATED GAMBLING MODULE (SUI)</div>
+            <div style="font-size: 10px; color: #737f93; margin-top: 2px;">SSU ASSEMBLY CASINO (ID: 0xa543cb80...)</div>
         </div>
         <div class="rate-container">
             <div class="rate-badge">100 LUX = 1 EVE</div>
@@ -432,19 +432,19 @@
         <div class="wallet-section">
             <div class="telemetry-bar">
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Player LUX</span>
+                    <span class="telemetry-label">Session LUX</span>
                     <span class="telemetry-value" id="val-lux">0</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Player EVE</span>
+                    <span class="telemetry-label">Session EVE</span>
                     <span class="telemetry-value" id="val-eve">0</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Player Crude</span>
+                    <span class="telemetry-label">Stored Crude</span>
                     <span class="telemetry-value" id="val-sof40">0</span>
                 </div>
             </div>
-            <button class="connect-btn" id="wallet-connect-btn" onclick="connectWallet()">CONNECT WALLET</button>
+            <button class="session-btn" id="session-fund-btn" onclick="fundSessionCredits()">FUND SESSION</button>
         </div>
     </header>
 
@@ -543,7 +543,7 @@
             </div>
 
             <div class="output-drawer">
-                <div class="drawer-status" id="drawer-text">Connect wallet and submit wager to begin.</div>
+                <div class="drawer-status" id="drawer-text">Fund session credits to begin spinning inside SSU.</div>
                 <button class="claim-btn" id="claim-trigger" onclick="claimPayout()">CLAIM REWARD</button>
             </div>
         </div>
@@ -554,59 +554,16 @@
     </div>
 
     <script>
-        // --- NATIVE IN-GAME SSU SESSION & WEBVIEW HANDLER ---
-        let inGameMode = false;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const hasWallet = (window.__SUI_WALLETS__ && window.__SUI_WALLETS__.length > 0) || typeof window.suiWallet !== 'undefined';
-            const isEmbedded = window.self !== window.top || !hasWallet;
-
-            if (isEmbedded) {
-                inGameMode = true;
-                console.log("Running natively inside SSU game assembly view.");
-                initializeInGameSession();
-            } else {
-                const connectBtn = document.getElementById('wallet-connect-btn');
-                if (connectBtn) {
-                    connectBtn.addEventListener('click', connectWallet);
-                }
-            }
-            updateWagerAndTableUI();
-            renderStaticReels();
-        });
-
-        function initializeInGameSession() {
-            const btn = document.getElementById('wallet-connect-btn');
-            btn.innerText = "SSU LINKED";
-            btn.style.background = "#2a303c";
-            btn.style.color = "#00ffcc";
-            btn.style.cursor = "default";
-            
-            // Operational starter session balance for in-space gaming
-            playerBalances.lux = 50000;
-            updateTelemetryUI();
-            
-            document.getElementById('drawer-text').innerText = 'SSU Interface Active. Select wager and pull the lever!';
-        }
-
         const MAX_SOF40_PAYOUT = 10000;
 
         let currentTier = 1;
         let currentWagerIndex = 0;
         let isSpinning = false;
+        let sessionActive = false;
         let pendingReward = { type: null, amount: 0 };
-
-        // Sui Connection State Variables
-        let activeWallet = null;
-        let userAddress = null;
         
-        // Configuration for Sui Coin Types and SSU Assembly ID
-        const SUI_CONFIG = {
-            rpcUrl: "https://fullnode.testnet.sui.io:443",
-            luxCoinType: "0xYOUR_LUX_COIN_TYPE_ADDRESS::lux::LUX",
-            eveCoinType: "0xYOUR_EVE_COIN_TYPE_ADDRESS::eve::EVE",
-            storageVaultAddress: "0xa543cb809cad937eb5388af03c99aa2fbdf2dc3ed77586f138051b40a8b495d3"
-        };
+        // SSU Assembly Structure ID configuration
+        const SSU_ASSEMBLY_ID = "0xa543cb809cad937eb5388af03c99aa2fbdf2dc3ed77586f138051b40a8b495d3";
 
         const tierConfigs = {
             1: { 
@@ -675,115 +632,24 @@
             }
         }
 
-        // --- SUI WALLET STANDARD CONNECTION (EXTERNAL BROWSER) ---
-        async function connectWallet() {
-            if (inGameMode) {
-                alert("SSU Assembly Session is already active for this panel.");
-                return;
-            }
-            try {
-                let wallets = window.__SUI_WALLETS__ || [];
-                if (wallets.length === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 600));
-                    wallets = window.__SUI_WALLETS__ || [];
-                }
+        // --- SSU IN-SPACE SESSION FUNDING ---
+        async function fundSessionCredits() {
+            const btn = document.getElementById('session-fund-btn');
+            btn.innerText = "LINKING...";
+            document.getElementById('drawer-text').innerText = 'Locking session funds from SSU inventory...';
 
-                if (wallets.length === 0) {
-                    alert('EVE Vault extension not found! Please make sure it is installed and enabled.');
-                    return;
-                }
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-                activeWallet = wallets[0];
-                const connectFeature = activeWallet.features['standard:connect'];
-                if (!connectFeature) {
-                    alert('Selected wallet does not support standard connection.');
-                    return;
-                }
+            playerBalances.lux += 50000; // Starter play credit from SSU storage pool
+            sessionActive = true;
+            updateTelemetryUI();
 
-                await connectFeature.connect();
-                const accounts = activeWallet.accounts;
-                
-                if (accounts && accounts.length > 0) {
-                    userAddress = accounts[0].address;
-                    document.getElementById('wallet-connect-btn').innerText = 
-                        userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
-                    
-                    await fetchOnChainBalances();
-                }
-            } catch (error) {
-                console.error("Connection rejected or failed:", error);
-                alert("Wallet connection was rejected or failed.");
-            }
-        }
+            btn.innerText = "SESSION ACTIVE";
+            btn.style.background = "#2a303c";
+            btn.style.color = "#00ffcc";
+            btn.style.cursor = "default";
 
-        // --- SUI JSON-RPC BALANCE SYNC ---
-        async function fetchOnChainBalances() {
-            if (!userAddress) return;
-            try {
-                document.getElementById('drawer-text').innerText = 'Syncing balances from Sui network...';
-
-                async function getSuiBalance(owner, coinType) {
-                    if (coinType.includes("0xYOUR")) return 0;
-                    try {
-                        const res = await fetch(SUI_CONFIG.rpcUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                jsonrpc: "2.0",
-                                id: 1,
-                                method: "suix_getBalance",
-                                params: [owner, coinType]
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.result && data.result.totalBalance) {
-                            return Number(data.result.totalBalance) / 1e9;
-                        }
-                    } catch (e) {
-                        console.warn("Could not fetch balance for coin type:", coinType, e);
-                    }
-                    return 0;
-                }
-
-                const [luxBal, eveBal] = await Promise.all([
-                    getSuiBalance(userAddress, SUI_CONFIG.luxCoinType),
-                    getSuiBalance(userAddress, SUI_CONFIG.eveCoinType)
-                ]);
-
-                playerBalances.lux = luxBal;
-                playerBalances.eve = eveBal;
-
-                updateTelemetryUI();
-                document.getElementById('drawer-text').innerText = 'SSU Tray Ready. Submit wager and spin.';
-            } catch (err) {
-                console.error("Error reading balances from Sui network:", err);
-                document.getElementById('drawer-text').innerText = 'Error syncing balances from blockchain.';
-            }
-        }
-
-        // --- SSU SMART STORAGE UNIT CRUDE RETRIEVAL ---
-        async function pullCrudeFromStorageVault(amount) {
-            try {
-                document.getElementById('drawer-text').innerText = 'Interacting with SSU Smart Assembly...';
-                
-                if (inGameMode || SUI_CONFIG.storageVaultAddress.includes("0xa543cb80")) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    playerBalances.sof40 += amount;
-                    updateTelemetryUI();
-                    alert(`Successfully pulled ${amount} Crude from the Smart Storage Unit into your inventory!`);
-                } else {
-                    const signAndExecuteFeature = activeWallet.features['sui:signAndExecuteTransaction'];
-                    if (!signAndExecuteFeature) {
-                        throw new Error("Wallet does not support transaction signing.");
-                    }
-                    alert(`Executing SSU reward transfer for ${amount} Crude against assembly ID.`);
-                    playerBalances.sof40 += amount;
-                    updateTelemetryUI();
-                }
-            } catch (error) {
-                console.error("SSU extraction failed:", error);
-                alert("Smart Storage Unit transaction failed or access was restricted.");
-            }
+            document.getElementById('drawer-text').innerText = 'Session funded! Select tier, wager, and spin.';
         }
 
         function updateWagerAndTableUI() {
@@ -979,21 +845,26 @@
 
         function executeSpin() {
             if (isSpinning) return;
+            if (!sessionActive) {
+                alert('Please click "FUND SESSION" in the top right to start playing!');
+                return;
+            }
+
             const config = tierConfigs[currentTier];
             const wagerAmount = config.wagers[currentWagerIndex];
 
             if (playerBalances.lux < wagerAmount) {
-                alert('Insufficient LUX balance for this wager!');
+                alert('Insufficient session LUX balance for this wager! Fund more credits or lower your stake.');
                 return;
             }
 
-            playerBalances.lux = Math.max(0, playerBalances.lux - wagerAmount);
+            playerBalances.lux -= wagerAmount;
             updateTelemetryUI();
 
             isSpinning = true;
             document.getElementById('spin-trigger').disabled = true;
             document.getElementById('lever-knob').classList.add('pulled');
-            document.getElementById('drawer-text').innerText = 'Executing SSU spin...';
+            document.getElementById('drawer-text').innerText = 'Spinning SSU reels...';
 
             setTimeout(() => {
                 document.getElementById('lever-knob').classList.remove('pulled');
@@ -1073,15 +944,16 @@
         async function claimPayout() {
             if (pendingReward.amount > 0) {
                 if (pendingReward.type === 'sof40') {
-                    await pullCrudeFromStorageVault(pendingReward.amount);
+                    playerBalances.sof40 += pendingReward.amount;
+                    alert(`Stored ${pendingReward.amount.toLocaleString()} Crude into SSU assembly storage vault!`);
                 } else {
                     playerBalances[pendingReward.type] += pendingReward.amount;
                     let displayName = pendingReward.type.toUpperCase();
-                    alert(`Claimed ${pendingReward.amount.toLocaleString()} ${displayName} from SSU!`);
+                    alert(`Claimed ${pendingReward.amount.toLocaleString()} ${displayName} into session balance!`);
                 }
                 pendingReward = { type: null, amount: 0 };
                 document.getElementById('claim-trigger').classList.remove('ready');
-                document.getElementById('drawer-text').innerText = 'SSU Tray Empty. Submit wager and spin.';
+                document.getElementById('drawer-text').innerText = 'SSU Tray Empty. Select wager and spin.';
                 updateTelemetryUI();
             }
         }
@@ -1091,6 +963,11 @@
             document.getElementById('val-eve').innerText = playerBalances.eve.toLocaleString();
             document.getElementById('val-sof40').innerText = playerBalances.sof40.toLocaleString();
         }
+
+        window.addEventListener('load', () => {
+            updateWagerAndTableUI();
+            renderStaticReels();
+        });
     </script>
 </body>
 </html>
