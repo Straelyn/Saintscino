@@ -656,32 +656,65 @@
             }
         }
 
-        // --- SUI WALLET STANDARD CONNECTION (EVE VAULT) ---
-        async function connectWallet() {
-            try {
-                const wallets = window.__SUI_WALLETS__ || [];
-                if (wallets.length === 0) {
-                    alert('EVE Vault / Sui Wallet extension not detected! Please ensure it is installed and enabled in your browser.');
-                    return;
-                }
+       // --- SUI WALLET STANDARD CONNECTION (EVE VAULT) ---
+async function connectWallet() {
+    try {
+        console.log("Attempting to connect to Sui wallet...");
+        
+        // Scan for injected Sui wallets (EVE Vault)
+        let wallets = window.__SUI_WALLETS__ || [];
+        
+        if (wallets.length === 0) {
+            // Brief fallback wait in case the extension loads a split-second late
+            await new Promise(resolve => setTimeout(resolve, 600));
+            wallets = window.__SUI_WALLETS__ || [];
+        }
 
-                activeWallet = wallets[0];
-                const connectFeature = activeWallet.features['standard:connect'];
-                if (!connectFeature) {
-                    alert('Selected wallet does not support standard connection.');
-                    return;
-                }
+        if (wallets.length === 0) {
+            alert('EVE Vault extension not found! Please make sure it is installed and enabled in your browser extension bar.');
+            return;
+        }
 
-                await connectFeature.connect();
-                const accounts = activeWallet.accounts;
-                
-                if (accounts && accounts.length > 0) {
-                    userAddress = accounts[0].address;
-                    document.getElementById('wallet-connect-btn').innerText = 
-                        userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
-                    
-                    await fetchOnChainBalances();
-                }
+        activeWallet = wallets[0];
+        const connectFeature = activeWallet.features['standard:connect'];
+        
+        if (!connectFeature) {
+            alert('The connected wallet does not support the Sui Wallet Standard connection protocol.');
+            return;
+        }
+
+        // Trigger the official wallet popup prompt
+        await connectFeature.connect();
+        const accounts = activeWallet.accounts;
+        
+        if (accounts && accounts.length > 0) {
+            userAddress = accounts[0].address;
+            console.log("Successfully connected address:", userAddress);
+            
+            // Update button text to show truncated address
+            document.getElementById('wallet-connect-btn').innerText = 
+                userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
+            
+            // Sync balances immediately upon connection
+            await fetchOnChainBalances();
+        } else {
+            alert('No accounts authorized by the wallet.');
+        }
+    } catch (error) {
+        console.error("Connection rejected or failed:", error);
+        alert("Wallet connection was rejected or failed. Check console for details.");
+    }
+}
+
+// Bind button programmatically to ensure it fires reliably
+window.addEventListener('DOMContentLoaded', () => {
+    const connectBtn = document.getElementById('wallet-connect-btn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', connectWallet);
+    }
+    updateWagerAndTableUI();
+    renderStaticReels();
+});
             } catch (error) {
                 console.error("Connection rejected or failed:", error);
                 alert("Wallet connection failed or was rejected.");
