@@ -3,57 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVE Frontier - Smart Storage Slot Machine</title>
+    <title>EVE Frontier - SSU Vault Slot Machine</title>
     <style>
         :root {
             --bg-dark: #0a0d12;
-            --panel-bg: rgba(16, 23, 34, 0.85);
+            --panel-bg: rgba(16, 23, 34, 0.9);
             --border-cyan: #00f0ff;
             --border-dim: #1e2d3d;
             --text-main: #c0d0e0;
             --text-bright: #ffffff;
             --accent-gold: #ffb700;
-            --accent-glow: 0 0 15px rgba(0, 240, 255, 0.4);
-            --gold-glow: 0 0 20px rgba(255, 183, 0, 0.5);
+            --accent-glow: 0 0 15px rgba(0, 240, 255, 0.3);
             --font-mono: 'Courier New', Courier, monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
             background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at 50% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
-                linear-gradient(to bottom, #05070a, #0d121c);
+            background-image: radial-gradient(circle at 50% 20%, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            overflow-x: hidden;
         }
 
         .dapp-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
             background: var(--panel-bg);
             border: 1px solid var(--border-cyan);
             box-shadow: var(--accent-glow);
-            backdrop-filter: blur(10px);
             border-radius: 4px;
             padding: 24px;
             position: relative;
         }
 
         .dapp-container::before {
-            content: 'EVE FRONTIER // SSU DAPP';
+            content: 'EVE FRONTIER // SSU STORAGE VAULT CASINO';
             position: absolute;
             top: -10px;
             left: 20px;
@@ -62,7 +52,6 @@
             font-family: var(--font-mono);
             font-size: 11px;
             color: var(--border-cyan);
-            letter-spacing: 2px;
             border: 1px solid var(--border-cyan);
         }
 
@@ -72,40 +61,20 @@
             align-items: center;
             border-bottom: 1px solid var(--border-dim);
             padding-bottom: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        .title-group h1 {
-            font-size: 20px;
-            color: var(--text-bright);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .title-group p {
-            font-size: 12px;
-            color: #6a7e95;
-            font-family: var(--font-mono);
-        }
-
-        .status-badge {
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid var(--border-cyan);
-            color: var(--border-cyan);
-            font-family: var(--font-mono);
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: 2px;
-        }
+        h1 { font-size: 18px; color: var(--text-bright); text-transform: uppercase; letter-spacing: 1px; }
+        .sub-text { font-size: 11px; color: #6a7e95; font-family: var(--font-mono); }
 
         .main-grid {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 360px 1fr;
             gap: 20px;
         }
 
         .panel {
-            background: rgba(8, 12, 18, 0.9);
+            background: rgba(8, 12, 18, 0.95);
             border: 1px solid var(--border-dim);
             padding: 16px;
             border-radius: 2px;
@@ -117,73 +86,55 @@
             color: #6a7e95;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-dim);
+            padding-bottom: 4px;
             display: flex;
             justify-content: space-between;
         }
 
-        /* Inventory Box Styling */
-        .deposit-box {
+        .inventory-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
+            margin-bottom: 12px;
         }
 
-        .stat-card {
-            background: rgba(18, 26, 38, 0.6);
-            border: 1px dashed var(--border-dim);
-            padding: 12px;
+        .inventory-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            background: rgba(18, 26, 38, 0.5);
+            border: 1px solid var(--border-dim);
+            padding: 6px 10px;
+            font-size: 12px;
         }
 
-        .item-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 240, 255, 0.05);
-            border: 1px solid var(--border-cyan);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-        }
-
-        .stat-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #6a7e95;
-        }
-
-        .stat-value {
+        .item-id {
             font-family: var(--font-mono);
-            font-size: 18px;
+            color: #6a7e95;
+            font-size: 10px;
+        }
+
+        .item-val {
+            font-family: var(--font-mono);
             color: var(--text-bright);
             font-weight: bold;
         }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        input[type="number"] {
+        select {
             width: 100%;
             background: #05080c;
             border: 1px solid var(--border-dim);
             color: #fff;
             padding: 8px;
             font-family: var(--font-mono);
+            font-size: 12px;
+            margin-bottom: 12px;
             outline: none;
         }
 
-        input[type="number"]:focus {
-            border-color: var(--border-cyan);
-        }
+        select:focus { border-color: var(--border-cyan); }
 
         .btn {
             background: rgba(0, 240, 255, 0.1);
@@ -193,171 +144,207 @@
             font-family: var(--font-mono);
             font-size: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            width: 100%;
             text-transform: uppercase;
+            transition: all 0.2s;
         }
 
-        .btn:hover {
-            background: var(--border-cyan);
-            color: var(--bg-dark);
-            box-shadow: var(--accent-glow);
-        }
+        .btn:hover { background: var(--border-cyan); color: var(--bg-dark); }
 
         .btn-spin {
-            width: 100%;
             height: 50px;
             background: rgba(255, 183, 0, 0.15);
             border: 1px solid var(--accent-gold);
             color: var(--accent-gold);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             letter-spacing: 2px;
-            margin-top: 16px;
+            margin-top: 12px;
         }
 
-        .btn-spin:hover {
-            background: var(--accent-gold);
-            color: #000;
-            box-shadow: var(--gold-glow);
-        }
-
-        /* Slot Machine Visuals */
-        .slot-machine-stage {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+        .btn-spin:hover { background: var(--accent-gold); color: #000; }
 
         .reels-container {
             display: flex;
             gap: 12px;
+            justify-content: center;
             margin: 20px 0;
             background: #05080c;
             padding: 16px;
             border: 1px solid var(--border-dim);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
         }
 
         .reel {
-            width: 90px;
-            height: 110px;
+            width: 80px;
+            height: 100px;
             background: rgba(16, 23, 34, 0.9);
             border: 1px solid var(--border-dim);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 36px;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.1s;
-        }
-
-        .reel.spinning {
-            animation: pulseBlur 0.15s infinite alternate;
-        }
-
-        @keyframes pulseBlur {
-            0% { filter: blur(0px); transform: translateY(-2px); }
-            100% { filter: blur(2px); transform: translateY(2px); }
+            font-size: 32px;
         }
 
         .outcome-banner {
-            height: 24px;
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 12px;
             color: var(--accent-gold);
-            letter-spacing: 1px;
             text-align: center;
+            height: 20px;
+            margin-bottom: 10px;
         }
 
         .log-panel {
-            margin-top: 20px;
+            margin-top: 16px;
             background: #05080c;
             border: 1px solid var(--border-dim);
-            padding: 12px;
+            padding: 10px;
             font-family: var(--font-mono);
             font-size: 11px;
-            height: 100px;
+            height: 90px;
             overflow-y: auto;
             color: #5a6e85;
         }
 
-        .log-entry {
-            margin-bottom: 4px;
+        .owner-section {
+            background: rgba(255, 183, 0, 0.04);
+            border: 1px dashed var(--accent-gold);
+            padding: 10px;
+            margin-bottom: 14px;
         }
-
-        .log-entry.success { color: var(--border-cyan); }
-        .log-entry.win { color: var(--accent-gold); }
     </style>
 </head>
 <body>
 
     <div class="dapp-container">
         <header>
-            <div class="title-group">
-                <h1>Crude Ore Slot Assembly</h1>
-                <p>SMART STORAGE UNIT // SUI MOVE CONTRACT ENGINE</p>
+            <div>
+                <h1>SSU Vault Slot Machine</h1>
+                <div class="sub-text">DIRECT SSU INVENTORY ROUTING // ALL PAYMENTS IN & PAYOUTS OUT</div>
             </div>
-            <div class="status-badge">SSU: ONLINE</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--border-cyan); text-align: right;">
+                <div>SSU STATUS: ONLINE</div>
+                <div style="color: var(--accent-gold); font-size: 10px; margin-top: 2px;">
+                    OWNER: 0x7628...9f7b
+                </div>
+            </div>
         </header>
 
         <div class="main-grid">
-            <!-- Left Side: Deposit Vault Controls -->
-            <div class="panel deposit-box">
-                <div class="panel-title">
-                    <span>Wager Vault</span>
-                    <span style="color: var(--border-cyan);">[ACTIVE]</span>
-                </div>
+            <!-- Left Panel: Your SSU Vault & Player Vault -->
+            <div class="panel">
+                <!-- YOUR SSU STORAGE VAULT -->
+                <div class="owner-section">
+                    <div class="panel-title" style="color: var(--accent-gold); border-bottom-color: rgba(255,183,0,0.3);">
+                        <span>YOUR SSU VAULT INVENTORY</span>
+                        <span>[0x7628...9f7b]</span>
+                    </div>
+                    
+                    <div style="font-size: 10px; color: #8a9ea5; margin-bottom: 4px; font-family: var(--font-mono);">RECEIVING PAYMENTS:</div>
+                    <div class="inventory-list">
+                        <div class="inventory-item">
+                            <div>Thermal Composites <div class="item-id">88561</div></div>
+                            <div class="item-val" id="owner-88561" style="color: var(--border-cyan);">0</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div>Carbon Weave <div class="item-id">84210</div></div>
+                            <div class="item-val" id="owner-84210" style="color: var(--border-cyan);">0</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div>Reinforced Alloys <div class="item-id">84182</div></div>
+                            <div class="item-val" id="owner-84182" style="color: var(--border-cyan);">0</div>
+                        </div>
+                    </div>
 
-                <div class="stat-card">
-                    <div class="item-icon">🪨</div>
-                    <div class="stat-info">
-                        <span class="stat-label">Vault Balance</span>
-                        <span class="stat-value" id="vault-balance">250</span>
+                    <div style="font-size: 10px; color: #8a9ea5; margin-bottom: 4px; font-family: var(--font-mono);">DISPENSING REWARDS:</div>
+                    <div class="inventory-list" style="margin-bottom: 0;">
+                        <div class="inventory-item">
+                            <div>SOF Reserve <div class="item-id">84868</div></div>
+                            <div class="item-val" id="owner-84868" style="color: var(--accent-gold);">1,000</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div>EU Reserve <div class="item-id">78516</div></div>
+                            <div class="item-val" id="owner-78516" style="color: var(--accent-gold);">1,000</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="panel-title" style="margin-top: 10px;">Deposit Crude</div>
-                <div class="input-group">
-                    <input type="number" id="deposit-amount" value="50" min="10">
-                    <button class="btn" onclick="depositCrude()">Deposit</button>
+                <!-- PLAYER INVENTORY -->
+                <div class="panel-title">PLAYER INVENTORY</div>
+                <div class="inventory-list">
+                    <div class="inventory-item">
+                        <div>Thermal Composites <div class="item-id">88561</div></div>
+                        <div class="item-val" id="player-88561">150</div>
+                    </div>
+                    <div class="inventory-item">
+                        <div>Carbon Weave <div class="item-id">84210</div></div>
+                        <div class="item-val" id="player-84210">100</div>
+                    </div>
+                    <div class="inventory-item">
+                        <div>Reinforced Alloys <div class="item-id">84182</div></div>
+                        <div class="item-val" id="player-84182">75</div>
+                    </div>
+                    <div class="inventory-item">
+                        <div>SOF Winnings <div class="item-id">84868</div></div>
+                        <div class="item-val" id="player-84868">0</div>
+                    </div>
+                    <div class="inventory-item">
+                        <div>EU Winnings <div class="item-id">78516</div></div>
+                        <div class="item-val" id="player-78516">0</div>
+                    </div>
                 </div>
-
-                <div class="panel-title" style="margin-top: 10px;">Withdraw Winnings</div>
-                <button class="btn" style="width: 100%;" onclick="withdrawCrude()">Withdraw All</button>
             </div>
 
-            <!-- Right Side: Slot Machine UI -->
-            <div class="panel slot-machine-stage">
-                <div class="panel-title" style="width: 100%;">
-                    <span>Payout Odds: 40%</span>
-                    <span>Cost: 50 Crude / Spin</span>
+            <!-- Right Panel: Controls & Reel Stage -->
+            <div class="panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="panel-title">SELECT WAGER COMPONENT</div>
+                    <select id="wager-input-select">
+                        <option value="88561">Thermal Composites (ID: 88561) - Cost: 10</option>
+                        <option value="84210">Carbon Weave (ID: 84210) - Cost: 10</option>
+                        <option value="84182">Reinforced Alloys (ID: 84182) - Cost: 10</option>
+                    </select>
+
+                    <div class="reels-container">
+                        <div class="reel" id="reel-1">🔥</div>
+                        <div class="reel" id="reel-2">🧬</div>
+                        <div class="reel" id="reel-3">🛡️</div>
+                    </div>
+
+                    <div class="outcome-banner" id="outcome-text">READY FOR SPIN...</div>
                 </div>
 
-                <div class="reels-container">
-                    <div class="reel" id="reel-1">🪨</div>
-                    <div class="reel" id="reel-2">💎</div>
-                    <div class="reel" id="reel-3">⚡</div>
-                </div>
-
-                <div class="outcome-banner" id="outcome-text">AWAITING WAGER INPUT...</div>
-
-                <button class="btn btn-spin" id="spin-btn" onclick="executeSpin()">SPIN REELS</button>
+                <button class="btn btn-spin" id="spin-btn" onclick="executeItemSpin()">PULL WAGER & SPIN</button>
             </div>
         </div>
 
-        <!-- Dynamic Output Log -->
         <div class="log-panel" id="console-log">
-            <div class="log-entry">[SYS] Contract target: 0x8f2a...slot_machine::engine</div>
-            <div class="log-entry">[SYS] Player Wager Box initialized. Ready.</div>
+            <div class="log-entry">[SYS] Contract target bound to SSU Owner: 0x7628...9f7b</div>
+            <div class="log-entry">[SYS] Payments route -> Your SSU | Rewards draw -> Your SSU</div>
         </div>
     </div>
 
     <script>
-        const symbols = ['🪨', '💎', '⚡', '🔥', '⚙️'];
-        let balance = 250;
-        const spinCost = 50;
+        // YOUR SSU INVENTORY VAULT (Owner: 0x7628...9f7b)
+        const ownerSSUVault = {
+            "88561": 0,    // Thermal Composites Received
+            "84210": 0,    // Carbon Weave Received
+            "84182": 0,    // Reinforced Alloys Received
+            "84868": 1000, // SOF Reserve
+            "78516": 1000  // EU Reserve
+        };
+
+        // PLAYER INVENTORY
+        const playerStorage = {
+            "88561": 150, // Thermal Composites
+            "84210": 100, // Carbon Weave
+            "84182": 75,  // Reinforced Alloys
+            "84868": 0,   // SOF Winnings
+            "78516": 0    // EU Winnings
+        };
+
+        const wagerCost = 10;
+        const symbols = ['🔥', '🧬', '🛡️', '⚙️', '💎'];
 
         function log(msg, type = '') {
             const consoleLog = document.getElementById('console-log');
@@ -368,77 +355,82 @@
             consoleLog.scrollTop = consoleLog.scrollHeight;
         }
 
-        function depositCrude() {
-            const amountInput = document.getElementById('deposit-amount');
-            const amount = parseInt(amountInput.value);
-            if (isNaN(amount) || amount <= 0) return;
+        function updateUI() {
+            // Update Your SSU Vault Display
+            document.getElementById('owner-88561').textContent = ownerSSUVault["88561"];
+            document.getElementById('owner-84210').textContent = ownerSSUVault["84210"];
+            document.getElementById('owner-84182').textContent = ownerSSUVault["84182"];
+            document.getElementById('owner-84868').textContent = ownerSSUVault["84868"].toLocaleString();
+            document.getElementById('owner-78516').textContent = ownerSSUVault["78516"].toLocaleString();
 
-            balance += amount;
-            document.getElementById('vault-balance').textContent = balance;
-            log(`deposit_crude(${amount}) -> Success. Vault balance updated.`, 'success');
+            // Update Player Inventory Display
+            document.getElementById('player-88561').textContent = playerStorage["88561"];
+            document.getElementById('player-84210').textContent = playerStorage["84210"];
+            document.getElementById('player-84182').textContent = playerStorage["84182"];
+            document.getElementById('player-84868').textContent = playerStorage["84868"];
+            document.getElementById('player-78516').textContent = playerStorage["78516"];
         }
 
-        function withdrawCrude() {
-            if (balance === 0) return;
-            log(`withdraw_wager_box(${balance}) -> Transferred to main wallet.`, 'success');
-            balance = 0;
-            document.getElementById('vault-balance').textContent = balance;
-        }
+        function executeItemSpin() {
+            const selectElem = document.getElementById('wager-input-select');
+            const selectedInputId = selectElem.value;
 
-        function executeSpin() {
-            if (balance < spinCost) {
-                log('ERR: E_INSUFFICIENT_WAGER. Deposit more crude to spin.');
-                document.getElementById('outcome-text').textContent = 'INSUFFICIENT CRUDE IN VAULT';
+            // 1. Verify player has required wager items
+            if (playerStorage[selectedInputId] < wagerCost) {
+                log(`ERR: E_INSUFFICIENT_PLAYER_ITEMS for ID ${selectedInputId}.`);
+                document.getElementById('outcome-text').textContent = 'INSUFFICIENT PLAYER COMPONENTS';
                 return;
             }
 
+            // 2. TRANSFER PAYMENT: Deduct from Player -> Add directly to YOUR SSU Storage
+            playerStorage[selectedInputId] -= wagerCost;
+            ownerSSUVault[selectedInputId] += wagerCost;
+            updateUI();
+            log(`spin() -> Pulled ${wagerCost} of ID ${selectedInputId} from Player into Owner SSU Storage.`, 'success');
+
             const spinBtn = document.getElementById('spin-btn');
             spinBtn.disabled = true;
-            document.getElementById('outcome-text').textContent = 'EXECUTING TRANSACTION ON SUI...';
-
-            // Deduct wager immediately (Atomic Move operation simulator)
-            balance -= spinCost;
-            document.getElementById('vault-balance').textContent = balance;
-            log(`spin() called -> Wager pulled: ${spinCost} Crude.`, 'success');
-
-            const reel1 = document.getElementById('reel-1');
-            const reel2 = document.getElementById('reel-2');
-            const reel3 = document.getElementById('reel-3');
-
-            reel1.classList.add('spinning');
-            reel2.classList.add('spinning');
-            reel3.classList.add('spinning');
+            document.getElementById('outcome-text').textContent = 'PROCESSING SUI MOVE TRANSACTION...';
 
             setTimeout(() => {
-                reel1.classList.remove('spinning');
-                reel2.classList.remove('spinning');
-                reel3.classList.remove('spinning');
-
-                // Determine outcome
-                const isWin = Math.random() < 0.40; // 40% win chance matching Move contract
+                const isWin = Math.random() < 0.40; // 40% Win Chance
 
                 if (isWin) {
                     const winSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-                    reel1.textContent = winSymbol;
-                    reel2.textContent = winSymbol;
-                    reel3.textContent = winSymbol;
+                    document.getElementById('reel-1').textContent = winSymbol;
+                    document.getElementById('reel-2').textContent = winSymbol;
+                    document.getElementById('reel-3').textContent = winSymbol;
 
-                    const payout = spinCost * 2;
-                    balance += payout;
-                    document.getElementById('vault-balance').textContent = balance;
-                    document.getElementById('outcome-text').textContent = `WINNER! +${payout} CRUDE ADDED TO VAULT`;
-                    log(`WIN MATCH! execute_payout() -> Returned ${payout} Crude.`, 'win');
+                    const payoutAmount = wagerCost * 2;
+                    const rewardId = Math.random() < 0.5 ? "84868" : "78516";
+                    const rewardName = rewardId === "84868" ? "SOF" : "EU";
+
+                    // Check if YOUR SSU has enough payout stock
+                    if (ownerSSUVault[rewardId] < payoutAmount) {
+                        log(`ERR: E_INSUFFICIENT_OWNER_RESERVE for ID ${rewardId}.`);
+                        document.getElementById('outcome-text').textContent = 'OWNER SSU RESERVE EMPTY!';
+                        spinBtn.disabled = false;
+                        return;
+                    }
+
+                    // 3. TRANSFER WINNINGS: Deduct from YOUR SSU Storage -> Add to Player
+                    ownerSSUVault[rewardId] -= payoutAmount;
+                    playerStorage[rewardId] += payoutAmount;
+                    updateUI();
+
+                    document.getElementById('outcome-text').textContent = `WIN! +${payoutAmount} ${rewardName} DRAWN FROM YOUR SSU!`;
+                    log(`WIN MATCH! Payout ${payoutAmount} ${rewardName} (ID ${rewardId}) drawn from Owner SSU to Player.`, 'win');
                 } else {
-                    reel1.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-                    reel2.textContent = symbols[(symbols.indexOf(reel1.textContent) + 1) % symbols.length];
-                    reel3.textContent = symbols[(symbols.indexOf(reel2.textContent) + 2) % symbols.length];
+                    document.getElementById('reel-1').textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                    document.getElementById('reel-2').textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                    document.getElementById('reel-3').textContent = symbols[Math.floor(Math.random() * symbols.length)];
 
-                    document.getElementById('outcome-text').textContent = 'NO MATCH. CRUDE ABSORBED BY HOUSE.';
-                    log('NO MATCH. Wager transferred to SlotMachine reserves.');
+                    document.getElementById('outcome-text').textContent = 'NO MATCH. PAYMENT RETAINED IN YOUR SSU.';
+                    log(`No match. ${wagerCost} units of ID ${selectedInputId} stored in Your SSU.`);
                 }
 
                 spinBtn.disabled = false;
-            }, 1200);
+            }, 1000);
         }
     </script>
 </body>
