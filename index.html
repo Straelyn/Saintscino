@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Saints RIFT - SSU Casino dApp</title>
     <!-- Include Ethers.js for Web3 Wallet & Smart Contract handling -->
-    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         :root {
             --bg-dark: #0c0e12;
@@ -572,7 +572,7 @@
         const CONTRACT_CONFIG = {
             luxTokenAddress: "0xYOUR_LUX_TOKEN_CONTRACT_ADDRESS",
             eveTokenAddress: "0xYOUR_EVE_TOKEN_CONTRACT_ADDRESS",
-            storageVaultAddress: "0xYOUR_SSU_ASSEMBLY_CONTRACT_ADDRESS",
+            storageVaultAddress: "0xa543cb809cad937eb5388af03c99aa2fbdf2dc3ed77586f138051b40a8b495d3",
             erc20Abi: [
                 "function balanceOf(address owner) view returns (uint256)",
                 "function transfer(address to, uint256 amount) returns (bool)",
