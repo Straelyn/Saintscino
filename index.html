@@ -89,6 +89,22 @@
             background: var(--RIFT-amber);
         }
 
+        .admin-btn {
+            background: #8c2a35;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-btn:hover {
+            background: #a8323f;
+        }
+
         .telemetry-bar {
             display: flex;
             gap: 20px;
@@ -389,6 +405,11 @@
             color: var(--text-dim);
         }
 
+        .action-btns-group {
+            display: flex;
+            gap: 10px;
+        }
+
         .claim-btn {
             background: var(--RIFT-gold);
             color: #0c0e12;
@@ -403,6 +424,21 @@
         .claim-btn.ready {
             display: block;
             animation: pulse 1s infinite alternate;
+        }
+
+        .withdraw-session-btn {
+            background: #2a303c;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 8px 16px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .withdraw-session-btn.ready {
+            display: block;
         }
 
         @keyframes pulse {
@@ -432,19 +468,20 @@
         <div class="wallet-section">
             <div class="telemetry-bar">
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Session LUX</span>
+                    <span class="telemetry-label">Vault LUX</span>
                     <span class="telemetry-value" id="val-lux">0</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Session EVE</span>
+                    <span class="telemetry-label">Vault EVE</span>
                     <span class="telemetry-value" id="val-eve">0</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">Stored Crude</span>
-                    <span class="telemetry-value" id="val-sof40">0</span>
+                    <span class="telemetry-label">House Profit</span>
+                    <span class="telemetry-value" id="val-house">0</span>
                 </div>
             </div>
-            <button class="session-btn" id="session-fund-btn" onclick="fundSessionCredits()">FUND SESSION</button>
+            <button class="session-btn" id="session-fund-btn" onclick="depositVaultCredits()">DEPOSIT LUX</button>
+            <button class="admin-btn" onclick="ownerSweepHouseProfits()">SWEEP HOUSE</button>
         </div>
     </header>
 
@@ -543,8 +580,11 @@
             </div>
 
             <div class="output-drawer">
-                <div class="drawer-status" id="drawer-text">Fund session credits to begin spinning inside SSU.</div>
-                <button class="claim-btn" id="claim-trigger" onclick="claimPayout()">CLAIM REWARD</button>
+                <div class="drawer-status" id="drawer-text">Deposit LUX into SSU assembly vault to begin.</div>
+                <div class="action-btns-group">
+                    <button class="withdraw-session-btn ready" id="withdraw-vault-btn" onclick="withdrawVaultCredits()">CASH OUT</button>
+                    <button class="claim-btn" id="claim-trigger" onclick="claimPayout()">CLAIM REWARD</button>
+                </div>
             </div>
         </div>
     </div>
@@ -559,7 +599,7 @@
         let currentTier = 1;
         let currentWagerIndex = 0;
         let isSpinning = false;
-        let sessionActive = false;
+        let vaultActive = false;
         let pendingReward = { type: null, amount: 0 };
         
         // SSU Assembly Structure ID configuration
@@ -601,10 +641,14 @@
             }
         };
 
-        let playerBalances = {
+        // Vault & House Accounting State
+        let playerVault = {
             lux: 0,
-            eve: 0,
-            sof40: 0
+            eve: 0
+        };
+
+        let houseProfits = {
+            lux: 0
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -632,24 +676,63 @@
             }
         }
 
-        // --- SSU IN-SPACE SESSION FUNDING ---
-        async function fundSessionCredits() {
-            const btn = document.getElementById('session-fund-btn');
-            btn.innerText = "LINKING...";
-            document.getElementById('drawer-text').innerText = 'Locking session funds from SSU inventory...';
+        // --- SSU ASSEMBLY VAULT DEPOSIT & WITHDRAWAL ---
+        async function depositVaultCredits() {
+            const depositAmount = prompt("Enter amount of LUX to deposit into SSU vault:", "50000");
+            if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) return;
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            document.getElementById('drawer-text').innerText = `Transferring ${Number(depositAmount).toLocaleString()} LUX to SSU Vault (${SSU_ASSEMBLY_ID.substring(0, 10)}...)`;
+            
+            await new Promise(resolve => setTimeout(resolve, 1200)); // Simulating on-chain move call execution
 
-            playerBalances.lux += 50000; // Starter play credit from SSU storage pool
-            sessionActive = true;
+            playerVault.lux += Number(depositAmount);
+            vaultActive = true;
             updateTelemetryUI();
 
-            btn.innerText = "SESSION ACTIVE";
-            btn.style.background = "#2a303c";
-            btn.style.color = "#00ffcc";
-            btn.style.cursor = "default";
+            document.getElementById('drawer-text').innerText = 'Deposit confirmed. Vault ready for wagering.';
+        }
 
-            document.getElementById('drawer-text').innerText = 'Session funded! Select tier, wager, and spin.';
+        async function withdrawVaultCredits() {
+            if (playerVault.lux <= 0 && playerVault.eve <= 0) {
+                alert("No funds available in your active vault balance to withdraw.");
+                return;
+            }
+
+            const luxOut = playerVault.lux;
+            const eveOut = playerVault.eve;
+
+            document.getElementById('drawer-text').innerText = 'Withdrawing funds back from SSU assembly to wallet...';
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            alert(`Successfully withdrawn: ${luxOut.toLocaleString()} LUX and ${eveOut.toLocaleString()} EVE back to your wallet inventory!`);
+            
+            playerVault.lux = 0;
+            playerVault.eve = 0;
+            vaultActive = false;
+            updateTelemetryUI();
+
+            document.getElementById('drawer-text').innerText = 'Vault withdrawn. Deposit LUX to play again.';
+        }
+
+        // --- OWNER ADMIN SWEEP HOUSE PROFITS ---
+        async function ownerSweepHouseProfits() {
+            if (houseProfits.lux <= 0) {
+                alert("No accumulated house profits available to sweep right now.");
+                return;
+            }
+
+            const profitAmount = houseProfits.lux;
+            const confirmSweep = confirm(`Owner Admin Action:\nSweep accumulated house earnings of ${profitAmount.toLocaleString()} LUX from SSU assembly (${SSU_ASSEMBLY_ID.substring(0, 10)}...) to your personal wallet?`);
+            
+            if (!confirmSweep) return;
+
+            document.getElementById('drawer-text').innerText = 'Executing owner sweep transaction on SSU assembly...';
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            alert(`Successfully swept ${profitAmount.toLocaleString()} LUX into your personal wallet!`);
+            houseProfits.lux = 0;
+            updateTelemetryUI();
+            document.getElementById('drawer-text').innerText = 'House profits swept successfully.';
         }
 
         function updateWagerAndTableUI() {
@@ -845,26 +928,28 @@
 
         function executeSpin() {
             if (isSpinning) return;
-            if (!sessionActive) {
-                alert('Please click "FUND SESSION" in the top right to start playing!');
+            if (!vaultActive || playerVault.lux <= 0) {
+                alert('Please click "DEPOSIT LUX" in the top right to fund your vault balance before playing!');
                 return;
             }
 
             const config = tierConfigs[currentTier];
             const wagerAmount = config.wagers[currentWagerIndex];
 
-            if (playerBalances.lux < wagerAmount) {
-                alert('Insufficient session LUX balance for this wager! Fund more credits or lower your stake.');
+            if (playerVault.lux < wagerAmount) {
+                alert('Insufficient vault LUX balance for this wager! Deposit more credits or lower your stake.');
                 return;
             }
 
-            playerBalances.lux -= wagerAmount;
+            // Deduct wager from player vault and add to house accumulation pool
+            playerVault.lux -= wagerAmount;
+            houseProfits.lux += wagerAmount;
             updateTelemetryUI();
 
             isSpinning = true;
             document.getElementById('spin-trigger').disabled = true;
             document.getElementById('lever-knob').classList.add('pulled');
-            document.getElementById('drawer-text').innerText = 'Spinning SSU reels...';
+            document.getElementById('drawer-text').innerText = 'Executing SSU assembly spin...';
 
             setTimeout(() => {
                 document.getElementById('lever-knob').classList.remove('pulled');
@@ -939,18 +1024,25 @@
             } else {
                 document.getElementById('drawer-text').innerText = 'No match. House retained wager.';
             }
+
+            // Enable cash out button once vault has balance
+            if (playerVault.lux > 0 || playerVault.eve > 0) {
+                document.getElementById('withdraw-vault-btn').classList.add('ready');
+            }
         }
 
         async function claimPayout() {
             if (pendingReward.amount > 0) {
-                if (pendingReward.type === 'sof40') {
-                    playerBalances.sof40 += pendingReward.amount;
-                    alert(`Stored ${pendingReward.amount.toLocaleString()} Crude into SSU assembly storage vault!`);
-                } else {
-                    playerBalances[pendingReward.type] += pendingReward.amount;
-                    let displayName = pendingReward.type.toUpperCase();
-                    alert(`Claimed ${pendingReward.amount.toLocaleString()} ${displayName} into session balance!`);
+                if (pendingReward.type === 'lux') {
+                    playerVault.lux += pendingReward.amount;
+                    alert(`Claimed ${pendingReward.amount.toLocaleString()} LUX into your active vault balance!`);
+                } else if (pendingReward.type === 'eve') {
+                    playerVault.eve += pendingReward.amount;
+                    alert(`Claimed ${pendingReward.amount.toLocaleString()} EVE into your active vault balance!`);
+                } else if (pendingReward.type === 'sof40') {
+                    alert(`Extracted ${pendingReward.amount.toLocaleString()} Crude directly from SSU assembly inventory into your ship hold!`);
                 }
+                
                 pendingReward = { type: null, amount: 0 };
                 document.getElementById('claim-trigger').classList.remove('ready');
                 document.getElementById('drawer-text').innerText = 'SSU Tray Empty. Select wager and spin.';
@@ -959,9 +1051,15 @@
         }
 
         function updateTelemetryUI() {
-            document.getElementById('val-lux').innerText = playerBalances.lux.toLocaleString();
-            document.getElementById('val-eve').innerText = playerBalances.eve.toLocaleString();
-            document.getElementById('val-sof40').innerText = playerBalances.sof40.toLocaleString();
+            document.getElementById('val-lux').innerText = playerVault.lux.toLocaleString();
+            document.getElementById('val-eve').innerText = playerVault.eve.toLocaleString();
+            document.getElementById('val-house').innerText = houseProfits.lux.toLocaleString();
+            
+            if (playerVault.lux > 0 || playerVault.eve > 0) {
+                document.getElementById('withdraw-vault-btn').classList.add('ready');
+            } else {
+                document.getElementById('withdraw-vault-btn').classList.remove('ready');
+            }
         }
 
         window.addEventListener('load', () => {
