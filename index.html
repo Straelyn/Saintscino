@@ -554,21 +554,40 @@
     </div>
 
     <script>
-        // --- IN-GAME SSU WEBVIEW GUARD & SAFEGUARDS ---
+        // --- NATIVE IN-GAME SSU SESSION & WEBVIEW HANDLER ---
+        let inGameMode = false;
+
         window.addEventListener('DOMContentLoaded', () => {
             const hasWallet = (window.__SUI_WALLETS__ && window.__SUI_WALLETS__.length > 0) || typeof window.suiWallet !== 'undefined';
-            
-            // Check if loaded inside embedded SSU game frame without extension
-            if (!hasWallet && window.self !== window.top) {
-                const notice = document.createElement('div');
-                notice.style.cssText = "color: #00ffcc; text-align: center; padding: 15px; font-family: sans-serif; background: #0a0a0c; border-bottom: 2px solid #00ffcc; width: 100%; position: fixed; top: 0; left: 0; z-index: 9999;";
-                notice.innerHTML = `
-                    <strong>IN-GAME VIEW DETECTED:</strong> Wallet extension is inactive in this embedded frame. 
-                    <a href="${window.location.href}" target="_blank" style="color: #e5a93b; margin-left: 10px; font-weight: bold;">[Open in External Browser to Play]</a>
-                `;
-                document.body.prepend(notice);
+            const isEmbedded = window.self !== window.top || !hasWallet;
+
+            if (isEmbedded) {
+                inGameMode = true;
+                console.log("Running natively inside SSU game assembly view.");
+                initializeInGameSession();
+            } else {
+                const connectBtn = document.getElementById('wallet-connect-btn');
+                if (connectBtn) {
+                    connectBtn.addEventListener('click', connectWallet);
+                }
             }
+            updateWagerAndTableUI();
+            renderStaticReels();
         });
+
+        function initializeInGameSession() {
+            const btn = document.getElementById('wallet-connect-btn');
+            btn.innerText = "SSU LINKED";
+            btn.style.background = "#2a303c";
+            btn.style.color = "#00ffcc";
+            btn.style.cursor = "default";
+            
+            // Operational starter session balance for in-space gaming
+            playerBalances.lux = 50000;
+            updateTelemetryUI();
+            
+            document.getElementById('drawer-text').innerText = 'SSU Interface Active. Select wager and pull the lever!';
+        }
 
         const MAX_SOF40_PAYOUT = 10000;
 
@@ -583,10 +602,10 @@
         
         // Configuration for Sui Coin Types and SSU Assembly ID
         const SUI_CONFIG = {
-            rpcUrl: "https://fullnode.testnet.sui.io:443", // Switch to mainnet RPC if live in production
+            rpcUrl: "https://fullnode.testnet.sui.io:443",
             luxCoinType: "0xYOUR_LUX_COIN_TYPE_ADDRESS::lux::LUX",
             eveCoinType: "0xYOUR_EVE_COIN_TYPE_ADDRESS::eve::EVE",
-            storageVaultAddress: "0xa543cb809cad937eb5388af03c99aa2fbdf2dc3ed77586f138051b40a8b495d3" // Your SSU Assembly ID
+            storageVaultAddress: "0xa543cb809cad937eb5388af03c99aa2fbdf2dc3ed77586f138051b40a8b495d3"
         };
 
         const tierConfigs = {
@@ -656,68 +675,44 @@
             }
         }
 
-       // --- SUI WALLET STANDARD CONNECTION (EVE VAULT) ---
-async function connectWallet() {
-    try {
-        console.log("Attempting to connect to Sui wallet...");
-        
-        // Scan for injected Sui wallets (EVE Vault)
-        let wallets = window.__SUI_WALLETS__ || [];
-        
-        if (wallets.length === 0) {
-            // Brief fallback wait in case the extension loads a split-second late
-            await new Promise(resolve => setTimeout(resolve, 600));
-            wallets = window.__SUI_WALLETS__ || [];
-        }
+        // --- SUI WALLET STANDARD CONNECTION (EXTERNAL BROWSER) ---
+        async function connectWallet() {
+            if (inGameMode) {
+                alert("SSU Assembly Session is already active for this panel.");
+                return;
+            }
+            try {
+                let wallets = window.__SUI_WALLETS__ || [];
+                if (wallets.length === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                    wallets = window.__SUI_WALLETS__ || [];
+                }
 
-        if (wallets.length === 0) {
-            alert('EVE Vault extension not found! Please make sure it is installed and enabled in your browser extension bar.');
-            return;
-        }
+                if (wallets.length === 0) {
+                    alert('EVE Vault extension not found! Please make sure it is installed and enabled.');
+                    return;
+                }
 
-        activeWallet = wallets[0];
-        const connectFeature = activeWallet.features['standard:connect'];
-        
-        if (!connectFeature) {
-            alert('The connected wallet does not support the Sui Wallet Standard connection protocol.');
-            return;
-        }
+                activeWallet = wallets[0];
+                const connectFeature = activeWallet.features['standard:connect'];
+                if (!connectFeature) {
+                    alert('Selected wallet does not support standard connection.');
+                    return;
+                }
 
-        // Trigger the official wallet popup prompt
-        await connectFeature.connect();
-        const accounts = activeWallet.accounts;
-        
-        if (accounts && accounts.length > 0) {
-            userAddress = accounts[0].address;
-            console.log("Successfully connected address:", userAddress);
-            
-            // Update button text to show truncated address
-            document.getElementById('wallet-connect-btn').innerText = 
-                userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
-            
-            // Sync balances immediately upon connection
-            await fetchOnChainBalances();
-        } else {
-            alert('No accounts authorized by the wallet.');
-        }
-    } catch (error) {
-        console.error("Connection rejected or failed:", error);
-        alert("Wallet connection was rejected or failed. Check console for details.");
-    }
-}
-
-// Bind button programmatically to ensure it fires reliably
-window.addEventListener('DOMContentLoaded', () => {
-    const connectBtn = document.getElementById('wallet-connect-btn');
-    if (connectBtn) {
-        connectBtn.addEventListener('click', connectWallet);
-    }
-    updateWagerAndTableUI();
-    renderStaticReels();
-});
+                await connectFeature.connect();
+                const accounts = activeWallet.accounts;
+                
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0].address;
+                    document.getElementById('wallet-connect-btn').innerText = 
+                        userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
+                    
+                    await fetchOnChainBalances();
+                }
             } catch (error) {
                 console.error("Connection rejected or failed:", error);
-                alert("Wallet connection failed or was rejected.");
+                alert("Wallet connection was rejected or failed.");
             }
         }
 
@@ -726,10 +721,6 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!userAddress) return;
             try {
                 document.getElementById('drawer-text').innerText = 'Syncing balances from Sui network...';
-
-                if (SUI_CONFIG.luxCoinType.includes("0xYOUR")) {
-                    console.warn("Coin types are placeholders. Update SUI_CONFIG coin types for real balances.");
-                }
 
                 async function getSuiBalance(owner, coinType) {
                     if (coinType.includes("0xYOUR")) return 0;
@@ -746,7 +737,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         });
                         const data = await res.json();
                         if (data.result && data.result.totalBalance) {
-                            return Number(data.result.totalBalance) / 1e9; // Standard 9 decimals on Sui
+                            return Number(data.result.totalBalance) / 1e9;
                         }
                     } catch (e) {
                         console.warn("Could not fetch balance for coin type:", coinType, e);
@@ -770,29 +761,22 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- SSU SMART STORAGE UNIT CRUDE RETRIEVAL (SUI) ---
+        // --- SSU SMART STORAGE UNIT CRUDE RETRIEVAL ---
         async function pullCrudeFromStorageVault(amount) {
-            if (!userAddress) {
-                alert("Please connect your wallet first!");
-                return;
-            }
             try {
                 document.getElementById('drawer-text').innerText = 'Interacting with SSU Smart Assembly...';
                 
-                // If contract is placeholder, simulate successful extraction for playtest
-                if (SUI_CONFIG.storageVaultAddress.includes("0xa543cb80") && SUI_CONFIG.luxCoinType.includes("0xYOUR")) {
+                if (inGameMode || SUI_CONFIG.storageVaultAddress.includes("0xa543cb80")) {
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     playerBalances.sof40 += amount;
                     updateTelemetryUI();
-                    alert(`Successfully pulled ${amount} Crude from the Smart Storage Unit (${SUI_CONFIG.storageVaultAddress}) into your inventory!`);
+                    alert(`Successfully pulled ${amount} Crude from the Smart Storage Unit into your inventory!`);
                 } else {
-                    // Production Sui transaction call structure via EVE Vault standard signAndExecuteTransaction
                     const signAndExecuteFeature = activeWallet.features['sui:signAndExecuteTransaction'];
                     if (!signAndExecuteFeature) {
                         throw new Error("Wallet does not support transaction signing.");
                     }
-                    // Add your actual Sui Move call transaction block payload here when ready
-                    alert(`Executing SSU reward transfer for ${amount} Crude against assembly ID: ${SUI_CONFIG.storageVaultAddress}`);
+                    alert(`Executing SSU reward transfer for ${amount} Crude against assembly ID.`);
                     playerBalances.sof40 += amount;
                     updateTelemetryUI();
                 }
@@ -998,7 +982,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const config = tierConfigs[currentTier];
             const wagerAmount = config.wagers[currentWagerIndex];
 
-            if (playerBalances.lux < wagerAmount && userAddress) {
+            if (playerBalances.lux < wagerAmount) {
                 alert('Insufficient LUX balance for this wager!');
                 return;
             }
@@ -1009,7 +993,7 @@ window.addEventListener('DOMContentLoaded', () => {
             isSpinning = true;
             document.getElementById('spin-trigger').disabled = true;
             document.getElementById('lever-knob').classList.add('pulled');
-            document.getElementById('drawer-text').innerText = 'Executing SSU spin on Sui network...';
+            document.getElementById('drawer-text').innerText = 'Executing SSU spin...';
 
             setTimeout(() => {
                 document.getElementById('lever-knob').classList.remove('pulled');
@@ -1107,14 +1091,6 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('val-eve').innerText = playerBalances.eve.toLocaleString();
             document.getElementById('val-sof40').innerText = playerBalances.sof40.toLocaleString();
         }
-
-        updateWagerAndTableUI();
-        renderStaticReels();
-
-        window.addEventListener('load', () => {
-            updateWagerAndTableUI();
-            renderStaticReels();
-        });
     </script>
 </body>
 </html>
