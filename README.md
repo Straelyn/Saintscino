@@ -24,16 +24,16 @@ Each spin costs a tiny amount of SUI for gas (about 0.001 SUI).
 
 Three of a kind pays:
 
-| Symbols | Result | Chance | Pays |
+| Symbols | Result | Chance | Paid in |
 |---|---|---|---|
-| Rift - Wild ×3 | 50x | 0.2% | SOF-40 Fuel |
-| EVE Core ×3 | 40x | 0.5% | SOF-40 Fuel |
-| LUX Split ×3 | 30x | 1.5% | SOF-40 Fuel |
-| Asteroid ×3 | 20x | 5% | EU-40 Fuel |
+| Rift - Wild ×3 | 50× bet | 0.2% | SOF-40 Fuel |
+| EVE Core ×3 | 40× bet | 0.5% | SOF-40 Fuel |
+| LUX Split ×3 | 30× bet | 1.5% | SOF-40 Fuel |
+| Asteroid ×3 | 20× bet | 5% | EU-40 Fuel |
 | Feral Bar ×3 | Push | 15% | your stake back |
 | anything else | Lose | 77.8% | — |
 
-Example: a 20x win on a 1-unit bet pays 20 fuel; on a 10-unit bet, 200.
+Wins are multiples of your bet: a 50× win pays 50 fuel on a 1-unit bet, 250 on a 5-unit bet and 500 on a 10-unit bet.
 Each casino's owner can choose SOF-40 or EU-40 per win tier, so check the
 **Three of a kind pays** list on the page for the casino you're at.
 
@@ -51,7 +51,7 @@ Each casino's owner can choose SOF-40 or EU-40 per win tier, so check the
 2. Open the dApp at your unit, connect your EVE wallet, press **Set up a casino on this unit**.
    This creates your own casino (you're its admin) and installs the slots extension
    (it replaces any other extension on the unit).
-3. Stock the prizes in the unit's **main inventory**: at least **500 SOF-40** and **200 EU-40**
+3. Stock the prizes in the unit's **main inventory**: with the standard payouts, at least **500 SOF-40** and **200 EU-40**
    covers the biggest wins on 10-unit bets (the panel recalculates if you change payouts).
 4. Choose SOF-40 / EU-40 per tier under **Payouts**, then press **Open casino**.
 
@@ -61,4 +61,6 @@ Notes for owners:
 - If a unit changes hands, the new owner presses **Claim this casino** to take over.
 
 
+
 Questions, revisions or contract updates: **Straelyn - message in game**.
+
